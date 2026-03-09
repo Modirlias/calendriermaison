@@ -12,6 +12,7 @@
         <header class="header">
             <h1>📅 Planning Familial</h1>
             <div class="header-controls">
+                <div id="currentUserDisplay" class="current-user"></div>
                 <button class="btn-settings" id="btnSettings">⚙️ Paramètres</button>
                 <button class="btn-shopping-list" id="btnShoppingList">🛒 Liste de courses</button>
                 <button class="btn-add-user" id="btnAddUser">➕ Ajouter un utilisateur</button>
@@ -145,6 +146,9 @@
 
                 <label for="userColor">Choisir une couleur:</label>
                 <input type="color" id="userColor" class="color-input" value="#b19cd9">
+
+                <label for="userBirthdate">Date de naissance:</label>
+                <input type="date" id="userBirthdate" class="date-input">
 
                 <div class="modal-buttons">
                     <button id="btnSaveUser" class="btn-primary">Créer l'utilisateur</button>

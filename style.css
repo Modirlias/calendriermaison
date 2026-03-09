@@ -57,6 +57,13 @@ body {
     gap: 15px;
     justify-content: center;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+.current-user {
+    font-weight: bold;
+    color: var(--lila);
+    font-size: 1.1em;
 }
 
 /* Buttons */
@@ -397,6 +404,10 @@ body {
     background-color: var(--primary-bg);
     border-color: var(--border-color);
     box-shadow: none;
+}
+
+.day.today {
+    background-color: #d4bfff;
 }
 
 .day-number {

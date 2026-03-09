@@ -12,12 +12,20 @@ class PlanningApp {
         this.currentAppointmentDate = null;
         this.currentAppointmentId = null;
         this.currentHouseholdId = null; // Foyer actuellement sélectionné pour la liste de courses
+        this.currentUserId = null;
+        this.userIPMap = {};
+        this.clientIP = null;
         
         this.init();
     }
 
     init() {
         this.loadData();
+        this.getClientIP().then(ip => {
+            this.clientIP = ip;
+            this.setCurrentUserFromIP();
+            this.renderCurrentUser();
+        });
         this.setupEventListeners();
         this.renderCalendar();
         this.renderUsersList();
@@ -32,6 +40,8 @@ class PlanningApp {
         const storedShoppingListsPersonal = localStorage.getItem('shoppingListsPersonal');
         const storedHouseholds = localStorage.getItem('households');
         const storedCurrentHouseholdId = localStorage.getItem('currentHouseholdId');
+        const storedCurrentUserId = localStorage.getItem('currentUserId');
+        const storedUserIPMap = localStorage.getItem('userIPMap');
         
         this.users = storedUsers ? JSON.parse(storedUsers) : [];
         this.appointments = storedAppointments ? JSON.parse(storedAppointments) : [];
@@ -39,6 +49,8 @@ class PlanningApp {
         this.shoppingListsPersonal = storedShoppingListsPersonal ? JSON.parse(storedShoppingListsPersonal) : {};
         this.households = storedHouseholds ? JSON.parse(storedHouseholds) : [];
         this.currentHouseholdId = storedCurrentHouseholdId || null;
+        this.currentUserId = storedCurrentUserId || null;
+        this.userIPMap = storedUserIPMap ? JSON.parse(storedUserIPMap) : {};
         
         // Migration : si on a une ancienne shoppingList globale, la convertir en liste foyer
         if (!storedShoppingListsHousehold && localStorage.getItem('shoppingLists')) {
@@ -71,6 +83,26 @@ class PlanningApp {
         localStorage.setItem('shoppingListsPersonal', JSON.stringify(this.shoppingListsPersonal));
         localStorage.setItem('households', JSON.stringify(this.households));
         localStorage.setItem('currentHouseholdId', this.currentHouseholdId || '');
+        localStorage.setItem('currentUserId', this.currentUserId || '');
+        localStorage.setItem('userIPMap', JSON.stringify(this.userIPMap));
+    }
+
+    async getClientIP() {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        } catch (error) {
+            console.error('Failed to get IP:', error);
+            return '127.0.0.1'; // fallback for local
+        }
+    }
+
+    setCurrentUserFromIP() {
+        if (this.userIPMap[this.clientIP]) {
+            this.currentUserId = this.userIPMap[this.clientIP];
+            this.renderCurrentUser();
+        }
     }
 
     // Gestion des événements
@@ -179,6 +211,9 @@ class PlanningApp {
         if (isOtherMonth) {
             dayDiv.classList.add('other-month');
         }
+        if (date && this.isToday(date)) {
+            dayDiv.classList.add('today');
+        }
 
         const dayNumber = document.createElement('div');
         dayNumber.className = 'day-number';
@@ -204,7 +239,7 @@ class PlanningApp {
                 appointmentDiv.style.borderColor = categoryColor;
                 appointmentDiv.style.color = categoryColor;
                 
-                appointmentDiv.textContent = `${categoryIcon} ${apt.title}`;
+                appointmentDiv.textContent = `${categoryIcon} ${user ? user.name + ': ' : ''}${apt.title}`;
                 if (apt.time) {
                     const timeSpan = document.createElement('span');
                     timeSpan.className = 'appointment-time';
@@ -217,6 +252,22 @@ class PlanningApp {
                     this.openAppointmentModal(date, apt.id);
                 });
                 appointmentsContainer.appendChild(appointmentDiv);
+            });
+
+            // Vérifier les anniversaires
+            this.users.forEach(user => {
+                if (user.birthdate) {
+                    const birthDate = new Date(user.birthdate);
+                    if (birthDate.getMonth() === date.getMonth() && birthDate.getDate() === date.getDate()) {
+                        const birthdayDiv = document.createElement('div');
+                        birthdayDiv.className = 'appointment birthday';
+                        birthdayDiv.style.borderLeftColor = user.color;
+                        birthdayDiv.style.borderColor = user.color;
+                        birthdayDiv.style.color = user.color;
+                        birthdayDiv.textContent = `🎂 Anniversaire de ${user.name}`;
+                        appointmentsContainer.appendChild(birthdayDiv);
+                    }
+                }
             });
 
             dayDiv.appendChild(appointmentsContainer);
@@ -236,6 +287,13 @@ class PlanningApp {
 
     parseDate(dateString) {
         return new Date(dateString);
+    }
+
+    isToday(date) {
+        const today = new Date();
+        return date.getDate() === today.getDate() &&
+               date.getMonth() === today.getMonth() &&
+               date.getFullYear() === today.getFullYear();
     }
 
     // Gestion des utilisateurs
@@ -314,6 +372,20 @@ class PlanningApp {
         return labels[relation] || '❓';
     }
 
+    renderCurrentUser() {
+        const display = document.getElementById('currentUserDisplay');
+        if (this.currentUserId) {
+            const user = this.users.find(u => u.id === this.currentUserId);
+            if (user) {
+                display.textContent = `Utilisateur actif: ${user.name}`;
+            } else {
+                display.textContent = 'Aucun utilisateur actif';
+            }
+        } else {
+            display.textContent = 'Aucun utilisateur actif';
+        }
+    }
+
     renderUsersList() {
         const usersList = document.getElementById('usersList');
         usersList.innerHTML = '';
@@ -364,6 +436,7 @@ class PlanningApp {
         const genre = document.getElementById('userGenre').value;
         const relation = document.getElementById('userRelation').value;
         const color = document.getElementById('userColor').value;
+        const birthdate = document.getElementById('userBirthdate').value;
 
         if (!name) {
             alert('Veuillez entrer un nom d\'utilisateur');
@@ -375,7 +448,8 @@ class PlanningApp {
             name: name,
             genre: genre,
             relation: relation,
-            color: color
+            color: color,
+            birthdate: birthdate
         };
 
         this.users.push(newUser);
@@ -383,6 +457,14 @@ class PlanningApp {
         this.renderUsersList();
         this.populateUserSelect();
         this.closeUserModal();
+
+        // Associer l'utilisateur à l'IP et le définir comme actif
+        if (this.clientIP) {
+            this.userIPMap[this.clientIP] = newUser.id;
+            this.currentUserId = newUser.id;
+            this.saveData();
+            this.renderCurrentUser();
+        }
     }
 
     // Gestion des foyers
