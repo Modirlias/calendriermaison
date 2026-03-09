@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Familial Gothique</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📅 Planning Familial</h1>
+            <div class="header-controls">
+                <button class="btn-settings" id="btnSettings">⚙️ Paramètres</button>
+                <button class="btn-shopping-list" id="btnShoppingList">🛒 Liste de courses</button>
+                <button class="btn-add-user" id="btnAddUser">➕ Ajouter un utilisateur</button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="calendar-nav">
+            <button id="btnPrevMonth" class="btn-nav">◀ Mois précédent</button>
+            <div class="month-display">
+                <h2 id="monthYear"></h2>
+            </div>
+            <button id="btnNextMonth" class="btn-nav">Mois suivant ▶</button>
+        </nav>
+
+        <!-- Users Panel -->
+        <div class="users-panel">
+            <h3>Utilisateurs</h3>
+            <div id="usersList" class="users-list"></div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-wrapper">
+            <div class="calendar">
+                <div class="weekdays">
+                    <div class="weekday">Lun</div>
+                    <div class="weekday">Mar</div>
+                    <div class="weekday">Mer</div>
+                    <div class="weekday">Jeu</div>
+                    <div class="weekday">Ven</div>
+                    <div class="weekday">Sam</div>
+                    <div class="weekday">Dim</div>
+                </div>
+                <div id="calendarDays" class="days"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter/modifier un rendez-vous -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Ajouter un rendez-vous</h2>
+            <div class="modal-body">
+                <label for="appointmentDay">Jour sélectionné:</label>
+                <p id="appointmentDay"></p>
+
+                <label for="appointmentUser">Utilisateur:</label>
+                <select id="appointmentUser" class="select-user">
+                    <option value="">-- Sélectionner un utilisateur --</option>
+                </select>
+
+                <label for="appointmentCategory">Catégorie:</label>
+                <select id="appointmentCategory" class="select-category">
+                    <option value="personnel">👤 Personnel</option>
+                    <option value="familial">👨‍👩‍👧‍👦 Familial</option>
+                    <option value="medical">🏥 Médical</option>
+                    <option value="professionnel">💼 Professionnel</option>
+                    <option value="loisirs">🎭 Loisirs</option>
+                    <option value="administratif">📋 Administratif</option>
+                    <option value="shopping">🛍️ Shopping</option>
+                    <option value="sport">⚽ Sport</option>
+                    <option value="autre">❓ Autre</option>
+                </select>
+
+                <label for="appointmentTitle">Titre du rendez-vous:</label>
+                <input type="text" id="appointmentTitle" placeholder="ex: Dentiste" maxlength="30">
+
+                <label for="appointmentTime">Heure (optionnel):</label>
+                <input type="time" id="appointmentTime">
+
+                <label for="appointmentDescription">Description (optionnel):</label>
+                <textarea id="appointmentDescription" placeholder="Notes..." maxlength="100" rows="3"></textarea>
+
+                <div class="modal-buttons">
+                    <button id="btnSaveAppointment" class="btn-primary">Enregistrer</button>
+                    <button id="btnDeleteAppointment" class="btn-danger" style="display: none;">Supprimer</button>
+                    <button id="btnCancelAppointment" class="btn-secondary">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter un utilisateur -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Ajouter un nouvel utilisateur</h2>
+            <div class="modal-body">
+                <label for="userName">Nom de l'utilisateur:</label>
+                <input type="text" id="userName" placeholder="ex: Marie" maxlength="25">
+
+                <label for="userGenre">Genre:</label>
+                <select id="userGenre" class="select-genre">
+                    <option value="non-renseigne">Non renseigné</option>
+                    <option value="femme">👩 Femme</option>
+                    <option value="homme">👨 Homme</option>
+                    <option value="chat">🐱 Chat</option>
+                    <option value="chien">🐶 Chien</option>                    <option value="lapin">🐰 Lapin</option>
+                    <option value="oiseau">🐦 Oiseau</option>
+                    <option value="hamster">🐹 Hamster</option>
+                    <option value="poisson">🐠 Poisson</option>
+                    <option value="tortue">🐢 Tortue</option>
+                    <option value="souris">🐭 Souris</option>
+                    <option value="cobaye">🐹 Cobaye</option>
+                    <option value="perroquet">🦜 Perroquet</option>
+                    <option value="cheval">🐴 Cheval</option>                </select>
+
+                <label for="userRelation">Relation familiale:</label>
+                <select id="userRelation" class="select-relation">
+                    <option value="non-renseigne">Non renseigné</option>
+                    <option value="pere">👨 Père</option>
+                    <option value="mere">👩 Mère</option>
+                    <option value="fils">👦 Fils</option>
+                    <option value="fille">👧 Fille</option>
+                    <option value="frere">👨‍👦 Frère</option>
+                    <option value="soeur">👩‍👧 Sœur</option>
+                    <option value="grand-pere">👴 Grand-père</option>
+                    <option value="grand-mere">👵 Grand-mère</option>
+                    <option value="oncle">👨‍💼 Oncle</option>
+                    <option value="tante">👩‍💼 Tante</option>
+                    <option value="cousin">👦 Cousin</option>
+                    <option value="cousine">👧 Cousine</option>
+                    <option value="neveu">👶 Neveu</option>
+                    <option value="niece">👶 Nièce</option>
+                    <option value="conjoint">💑 Conjoint(e)</option>
+                    <option value="compagnon">💑 Compagnon/Compagne</option>
+                    <option value="animal-familier">🐾 Animal de compagnie</option>
+                    <option value="autre">❓ Autre</option>
+                </select>
+
+                <label for="userColor">Choisir une couleur:</label>
+                <input type="color" id="userColor" class="color-input" value="#b19cd9">
+
+                <div class="modal-buttons">
+                    <button id="btnSaveUser" class="btn-primary">Créer l'utilisateur</button>
+                    <button id="btnCancelUser" class="btn-secondary">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour créer/modifier un foyer -->
+    <div id="householdModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalHouseholdTitle">Créer un foyer</h2>
+            <div class="modal-body">
+                <label for="householdName">Nom du foyer:</label>
+                <input type="text" id="householdName" placeholder="ex: Foyer Dupont" maxlength="30">
+
+                <label for="householdColor">Couleur du foyer:</label>
+                <input type="color" id="householdColor" value="#b19cd9" class="color-input">
+
+                <div class="modal-buttons">
+                    <button id="btnSaveHousehold" class="btn-primary">Enregistrer</button>
+                    <button id="btnDeleteHousehold" class="btn-danger" style="display: none;">Supprimer</button>
+                    <button id="btnCancelHousehold" class="btn-secondary">Annuler</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour la liste de courses -->
+    <div id="shoppingModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>🛒 Liste de courses</h2>
+            <div class="modal-body">
+                <div class="shopping-controls">
+                    <select id="shoppingMode" class="select-shopping-mode">
+                        <option value="household">🏠 Foyer</option>
+                        <option value="personal">👤 Personnel</option>
+                    </select>
+                    <input type="text" id="newShoppingItem" placeholder="Ajouter un article..." maxlength="50">
+                    <button id="btnAddShoppingItem" class="btn-primary">➕ Ajouter</button>
+                </div>
+
+                <div class="shopping-mode-info" id="shoppingModeInfo"></div>
+
+                <div class="shopping-list" id="shoppingList">
+                    <!-- Les articles seront ajoutés ici dynamiquement -->
+                </div>
+
+                <div class="shopping-stats">
+                    <span id="shoppingStats">0 article(s) - 0 coché(s)</span>
+                    <button id="btnClearCompleted" class="btn-secondary">🗑️ Supprimer cochés</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal des paramètres -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content large-modal">
+            <span class="close">&times;</span>
+            <h2>⚙️ Paramètres de l'Application</h2>
+            <div class="modal-body">
+                <!-- Section Familles -->
+                <div class="settings-section">
+                    <h3>👨‍👩‍👧‍👦 Gestion des Foyers</h3>
+                    <div class="households-panel">
+                        <div class="households-header">
+                            <button class="btn-add-household" id="btnAddHousehold">➕ Nouveau Foyer</button>
+                        </div>
+                        <div class="household-selector">
+                            <label for="householdSelect">Foyer actif pour les courses :</label>
+                            <select id="householdSelect" class="select-household">
+                                <option value="">-- Sélectionner un foyer --</option>
+                            </select>
+                            <div id="currentHouseholdDisplay" class="current-household-display">Aucun foyer sélectionné</div>
+                        </div>
+                        <div id="householdsList" class="households-list"></div>
+                    </div>
+                </div>
+
+                <!-- Section Informations -->
+                <div class="settings-section">
+                    <h3>ℹ️ Informations</h3>
+                    <div class="info-section">
+                        <p><strong>📅 Planning Familial Gothique</strong></p>
+                        <p>Application de gestion de planning familial avec style gothique vintage.</p>
+                        <br>
+                        <p><strong>✨ Fonctionnalités :</strong></p>
+                        <ul>
+                            <li>• Calendrier mensuel avec navigation</li>
+                            <li>• Gestion multi-utilisateurs avec relations familiales</li>
+                            <li>• Catégorisation des rendez-vous</li>
+                            <li>• Listes de courses partagées par famille</li>
+                            <li>• Sauvegarde automatique locale</li>
+                        </ul>
+                        <br>
+                        <p><strong>🎨 Thème :</strong> Palette de couleurs lila et violet avec accents gothiques</p>
+                        <p><strong>💾 Stockage :</strong> Données sauvegardées automatiquement dans votre navigateur</p>
+                        <p><strong>📱 Compatible :</strong> Ordinateur, tablette et mobile</p>
+                    </div>
+                </div>
+
+                <!-- Section Statistiques -->
+                <div class="settings-section">
+                    <h3>📊 Statistiques</h3>
+                    <div class="stats-section">
+                        <div class="stat-item">
+                            <span class="stat-label">Utilisateurs :</span>
+                            <span class="stat-value" id="statsUsers">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Foyers :</span>
+                            <span class="stat-value" id="statsHouseholds">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Rendez-vous :</span>
+                            <span class="stat-value" id="statsAppointments">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Articles de courses :</span>
+                            <span class="stat-value" id="statsShoppingItems">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="tests.js"></script>
+</body>
+</html>
